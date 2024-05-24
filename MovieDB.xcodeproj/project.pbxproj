@@ -118,8 +118,8 @@
 		6BB7CFB02BEFB5BE008A0FCA /* Controller */ = {
 			isa = PBXGroup;
 			children = (
-				6B8F1C7B2BDD517F00D8E48E /* ViewController.swift */,
 				6BFC3EB22BFE49E800EA911F /* NetworkManager.swift */,
+				6B8F1C7B2BDD517F00D8E48E /* ViewController.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -147,7 +147,6 @@
 				43D31696F591334DA5810235 /* Pods-MovieDB.debug.xcconfig */,
 				874767AB91C9A43EAABF44D2 /* Pods-MovieDB.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
