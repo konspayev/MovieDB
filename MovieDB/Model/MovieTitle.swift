@@ -1,6 +1,6 @@
 //
 //  MovieTitle.swift
-//  NoStoryTest
+//  MovieDB
 //
 //  Created by Nursultan Konspayev on 06.05.2024.
 //

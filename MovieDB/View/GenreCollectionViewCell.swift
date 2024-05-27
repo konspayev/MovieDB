@@ -1,6 +1,6 @@
 //
 //  GenreCollectionViewCell.swift
-//  NoStoryTest
+//  MovieDB
 //
 //  Created by Nursultan Konspayev on 18.05.2024.
 //

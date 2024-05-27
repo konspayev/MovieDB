@@ -1,6 +1,6 @@
 //
 //  MovieDetailViewController.swift
-//  NoStoryTest
+//  MovieDB
 //
 //  Created by Nursultan Konspayev on 15.05.2024.
 //
@@ -11,9 +11,11 @@ import SnapKit
 class MovieDetailViewController: UIViewController {
     var movieData: MovieDetail?
     var movieID = 0
+    let urlImage = "https://image.tmdb.org/t/p/w500"
     
     var onScreenDismiss: (() -> Void)?
     
+    //MARK: - UIViews
     lazy var scrollMovieDetail: UIScrollView = {
         let scroll = UIScrollView()
         scroll.showsHorizontalScrollIndicator = false
@@ -37,7 +39,7 @@ class MovieDetailViewController: UIViewController {
     lazy var stackReleaseView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 10
+        stackView.spacing = 5
         return stackView
     }()
     
@@ -51,6 +53,7 @@ class MovieDetailViewController: UIViewController {
     lazy var genreCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
+        
         let collection = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
         collection.dataSource = self
         collection.delegate = self
@@ -73,13 +76,15 @@ class MovieDetailViewController: UIViewController {
         return label
     }()
     
+    //MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         self.title = "Movie"
-        apiRequest()
+        
+        
         setupViews()
-        setupLayout()
+        apiRequest()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -89,6 +94,17 @@ class MovieDetailViewController: UIViewController {
     
     func apiRequest() {
         let session = URLSession(configuration: .default)
+        
+        lazy var urlComponent: URLComponents = {
+            var component = URLComponents()
+            component.scheme = "https"
+            component.host = "api.themoviedb.org"
+            component.path = "/3/movie/\(movieID)"
+            component.queryItems = [
+                URLQueryItem(name: "api_key", value: "ced760785529022f787ac282841dc942")
+            ]
+            return component
+        }()
         
         guard let requestUrl = urlComponent.url else { return }
         let task = session.dataTask(with: requestUrl) {
@@ -106,7 +122,7 @@ class MovieDetailViewController: UIViewController {
         task.resume()
     }
     
-    private func setupViews() {
+    func setupViews() {
         view.addSubview(scrollMovieDetail)
         scrollMovieDetail.addSubview(movieImage)
         scrollMovieDetail.addSubview(titleLabel)
@@ -114,58 +130,48 @@ class MovieDetailViewController: UIViewController {
         scrollMovieDetail.addSubview(stackReleaseView)
         stackReleaseView.addArrangedSubview(releaseDateLabel)
         stackReleaseView.addArrangedSubview(genreCollectionView)
-    }
-    
-    private func setupLayout() {
+        
         scrollMovieDetail.snp.makeConstraints { make in
-            make.top.leading.trailing.bottom.equalToSuperview()
+            make.edges.equalTo(view.safeAreaLayoutGuide)
         }
         
         movieImage.snp.makeConstraints { make in
             make.top.equalTo(scrollMovieDetail.snp.top)
-            make.centerX.equalTo(scrollMovieDetail.snp.centerX)
             make.leading.equalTo(scrollMovieDetail.snp.leading).offset(32)
             make.trailing.equalTo(scrollMovieDetail.snp.trailing).offset(-32)
+            make.centerX.equalTo(scrollMovieDetail.snp.centerX)
             make.height.equalTo(424)
             make.width.equalTo(309)
         }
         
-        movieImage.snp.makeConstraints { make in
-            make.top.equalTo(scrollMovieDetail.snp.top)
-            make.centerX.equalTo(scrollMovieDetail.snp.centerX)
-            make.leading.equalTo(scrollMovieDetail.snp.leading).offset(32)
-            make.trailing.equalTo(scrollMovieDetail.snp.trailing).offset(-32)
-        }
-        
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(movieImage.snp.bottom).inset(17)
-            make.leading.equalTo(scrollMovieDetail.snp.leading).offset(32)
-            make.trailing.equalTo(scrollMovieDetail.snp.trailing).offset(-32)
+            make.top.equalTo(movieImage.snp.bottom).offset(16)
+            make.leading.equalTo(scrollMovieDetail.snp.leading).offset(16)
+            make.trailing.equalTo(scrollMovieDetail.snp.trailing).offset(-16)
         }
         
         stackReleaseView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).inset(17)
-            make.leading.equalTo(scrollMovieDetail.snp.leading).offset(32)
-            make.trailing.equalTo(scrollMovieDetail.snp.trailing).offset(-32)
-            make.bottom.equalTo(scrollMovieDetail.snp.bottom).offset(-17)
+            make.top.equalTo(titleLabel.snp.bottom).offset(16)
+            make.leading.equalTo(scrollMovieDetail.snp.leading).offset(16)
+            make.trailing.equalTo(scrollMovieDetail.snp.trailing).offset(-16)
+            make.bottom.equalTo(scrollMovieDetail.snp.bottom).offset(-16)
         }
         
         releaseDateLabel.snp.makeConstraints { make in
-            make.leading.trailing.top.equalToSuperview()
+            make.top.leading.trailing.equalToSuperview()
         }
         
         genreCollectionView.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalToSuperview()
-            make.top.equalTo(releaseDateLabel.snp.bottom)
-            make.height.equalTo(22)
+            make.top.equalTo(releaseDateLabel.snp.bottom).offset(5)
+            make.leading.trailing.equalToSuperview()
+            make.height.greaterThanOrEqualTo(22)
         }
     }
     
     func content() {
         guard let movieData = movieData else { return }
         titleLabel.text = movieData.originalTitle
-        releaseDateLabel.text = "Release Date: \(movieData.releaseDate ?? "Not announced")"
-        overviewText.text = movieData.overview
+        releaseDateLabel.text = "Release Data \(movieData.releaseDate ?? "Not announced")"
         let urlString = urlImage + movieData.posterPath!
         let url = URL(string: urlString)
         DispatchQueue.global(qos: .userInteractive).async {
@@ -176,7 +182,6 @@ class MovieDetailViewController: UIViewController {
             }
         }
     }
-    
 }
 
 extension MovieDetailViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {

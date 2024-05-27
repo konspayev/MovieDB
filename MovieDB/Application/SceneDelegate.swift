@@ -1,6 +1,6 @@
 //
 //  SceneDelegate.swift
-//  NoStoryTest
+//  MovieDB
 //
 //  Created by Nursultan Konspayev on 27.04.2024.
 //

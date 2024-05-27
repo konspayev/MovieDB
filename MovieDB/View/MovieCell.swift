@@ -1,6 +1,6 @@
 //
 //  MoviceCell.swift
-//  NoStoryTest
+//  MovieDB
 //
 //  Created by Nursultan Konspayev on 06.05.2024.
 //
@@ -24,6 +24,12 @@ class MovieCell: UITableViewCell {
         image.layer.masksToBounds = true
         image.layer.cornerRadius = 30
         return image
+    }()
+    
+    private lazy var activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.hidesWhenStopped = true
+        return indicator
     }()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -56,12 +62,17 @@ class MovieCell: UITableViewCell {
         movieStackView.spacing = 12
         
         contentView.addSubview(movieStackView)
+        contentView.addSubview(activityIndicator)
     
         movieStackView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(10)
             make.bottom.equalToSuperview()
             make.leading.equalToSuperview().offset(30)
             make.trailing.equalToSuperview().offset(-30)
+        }
+        
+        activityIndicator.snp.makeConstraints { make in
+            make.centerX.equalTo(contentView.snp.centerX)
         }
         
     }
