@@ -19,11 +19,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let mainViewController = ViewController()
         let tabBar = UITabBarController()
         let favoritesViewController = FavoritesViewCellViewController()
+        let watchlistViewController = WatchListViewController()
+        let findViewController = FindViewController()
+        let profileViewController = ProfileViewController()
         let navigationController = UINavigationController(rootViewController: mainViewController)
-        tabBar.viewControllers = [navigationController, favoritesViewController]
+        tabBar.viewControllers = [navigationController, favoritesViewController, watchlistViewController, findViewController, profileViewController]
         tabBar.tabBar.tintColor = .label
         navigationController.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 1)
         favoritesViewController.tabBarItem = UITabBarItem(title: "Favorites", image: UIImage(systemName: "heart"), tag: 2)
+        watchlistViewController.tabBarItem = UITabBarItem(title: "Watch list", image: UIImage(systemName: "eye"), tag: 3)
+        findViewController.tabBarItem = UITabBarItem(title: "Find", image: UIImage(systemName: "magnifyingglass"), tag: 4)
+        profileViewController.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person.crop.circle"), tag: 5)
         
         
         window?.makeKeyAndVisible()

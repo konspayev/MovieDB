@@ -47,7 +47,7 @@ class MovieDetailViewController: UIViewController {
         stackView.axis = .horizontal
         stackView.spacing = 5
         stackView.alignment = .center
-        stackView.distribution = .fillProportionally
+        stackView.distribution = .equalCentering
         return stackView
     }()
     
@@ -56,7 +56,7 @@ class MovieDetailViewController: UIViewController {
         stackView.axis = .vertical
         stackView.spacing = 1
         stackView.alignment = .center
-        stackView.distribution = .equalSpacing
+        stackView.distribution = .fillEqually
         return stackView
     }()
     
@@ -117,9 +117,12 @@ class MovieDetailViewController: UIViewController {
     
     lazy var genreCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
+        layout.scrollDirection = .horizontal
+        layout.minimumInteritemSpacing = 10
+        layout.minimumLineSpacing = 10
         
         let collection = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
+        collection.showsHorizontalScrollIndicator = false
         collection.dataSource = self
         collection.delegate = self
         collection.register(GenreCollectionViewCell.self, forCellWithReuseIdentifier: GenreCollectionViewCell.identifier)
@@ -220,6 +223,7 @@ class MovieDetailViewController: UIViewController {
         
         for _ in 0..<fullStarCount {
             let starImageView = UIImageView(image: UIImage(systemName: "star.fill"))
+            starImageView.tintColor = .systemYellow
             starImageView.snp.makeConstraints { make in
                 make.width.equalTo(24)
                 make.height.equalTo(24)
@@ -229,6 +233,7 @@ class MovieDetailViewController: UIViewController {
         
         if hasHalfStar {
             let halfStarImageView = UIImageView(image: UIImage(systemName: "star.leadinghalf.fill"))
+            halfStarImageView.tintColor = .systemYellow
             halfStarImageView.snp.makeConstraints { make in
                 make.width.equalTo(24)
                 make.height.equalTo(24)
@@ -240,6 +245,7 @@ class MovieDetailViewController: UIViewController {
         
         for _ in 0..<emptyStars {
             let emptyStarImageView = UIImageView(image: UIImage(systemName: "star"))
+            emptyStarImageView.tintColor = .systemYellow
             emptyStarImageView.snp.makeConstraints { make in
                 make.width.equalTo(24)
                 make.height.equalTo(24)
@@ -345,7 +351,7 @@ class MovieDetailViewController: UIViewController {
         stackRatingStarsView.snp.makeConstraints { make in
             make.top.equalTo(releaseDateLabel.snp.top)
             make.leading.trailing.equalToSuperview()
-            make.height.equalTo(50)
+            make.height.equalTo(24)
         }
         
         ratingLabel.snp.makeConstraints { make in
