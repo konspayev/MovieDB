@@ -9,12 +9,11 @@ import UIKit
 import SnapKit
 
 class ViewController: UIViewController {
-    ///Theme Collection View Cell, to choose a proper movie theme
+    //Theme Collection View Cell, to choose a proper movie theme
     private let themes: [MovieTheme] = [.popular, .upcoming, .nowPlaying, .topRated]
     
     private var currentTheme = MovieTheme.popular {
         didSet {
-            //            getThemeMovies(theme: currentTheme)
             fetchMoviesForCurrentTheme()
             themeCollectionView.reloadData()
         }
@@ -27,15 +26,6 @@ class ViewController: UIViewController {
         label.font = UIFont.preferredFont(forTextStyle: .headline)
         return label
     }()
-    
-    //    let session = URLSession(configuration: .default)
-    //    lazy var urlComponent: URLComponents = {
-    //        var component = URLComponents()
-    //        component.scheme = "https"
-    //        component.host = "api.themoviedb.org"
-    //        component.queryItems = [URLQueryItem(name: "api_key", value: "ced760785529022f787ac282841dc942")]
-    //        return component
-    //    }()
     
     lazy var themeCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -70,7 +60,7 @@ class ViewController: UIViewController {
         self.navigationController?.navigationBar.tintColor = .black
         
         setupViews()
-        //        getThemeMovies(theme: currentTheme)
+        //getThemeMovies(theme: currentTheme)
         fetchMoviesForCurrentTheme()
     }
     
@@ -150,6 +140,8 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         cell.setTitle(title: title)
         
         let urlImageString = "https://image.tmdb.org/t/p/w500" + movieData[indexPath.row].posterPath
+        
+        cell.startLoadingImage()
         
         if let url = URL(string: urlImageString) {
             DispatchQueue.global(qos: .userInitiated).async {

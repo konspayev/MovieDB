@@ -42,7 +42,7 @@ final class NetworkManager {
     static let shared = NetworkManager()
     
     // Base URL for movie images
-    private let imageURL = "https://image.tmdb.org/t/p/w500"
+    let imageURL = "https://image.tmdb.org/t/p/w500"
     
     // API key for authenticating requests to The Movie Database (TMDb)
     private let apiKey = "ced760785529022f787ac282841dc942"
@@ -102,6 +102,35 @@ final class NetworkManager {
                 //Handle JSON decoding errors
                 DispatchQueue.main.async {
                     completion(.failure(error))
+                }
+            }
+        }.resume()
+    }
+    
+    func getMovieDetail(movieID: Int, completion: @escaping (MovieDetail) -> Void) {
+        urlComponent.path = "/3/movie/\(movieID)"
+        guard let requestUrl = urlComponent.url else { return }
+        
+        session.dataTask(with: requestUrl) { data, response, error in
+            guard let data = data else {return}
+            if let movie = try? JSONDecoder().decode(MovieDetail.self, from: data)
+            {
+                DispatchQueue.main.async {
+                    completion(movie)
+                }
+            }
+        }.resume()
+    }
+    
+    func downloadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
+        session.dataTask(with: url) { data, response, error in
+            if let data = data, error == nil, let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    completion(image)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(nil)
                 }
             }
         }.resume()

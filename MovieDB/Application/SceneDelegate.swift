@@ -16,10 +16,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
         window?.windowScene = windowScene
-        window?.makeKeyAndVisible()
         let mainViewController = ViewController()
+        let tabBar = UITabBarController()
+        let favoritesViewController = FavoritesViewCellViewController()
         let navigationController = UINavigationController(rootViewController: mainViewController)
-        window?.rootViewController = navigationController
+        tabBar.viewControllers = [navigationController, favoritesViewController]
+        tabBar.tabBar.tintColor = .label
+        navigationController.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 1)
+        favoritesViewController.tabBarItem = UITabBarItem(title: "Favorites", image: UIImage(systemName: "heart"), tag: 2)
+        
+        
+        window?.makeKeyAndVisible()
+        window?.rootViewController = tabBar
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

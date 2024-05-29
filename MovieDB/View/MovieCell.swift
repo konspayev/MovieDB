@@ -46,7 +46,14 @@ class MovieCell: UITableViewCell {
     }
     
     func setImage(image: UIImage?) {
+        activityIndicator.stopAnimating()
         movieImage.image = image
+        movieImage.contentMode = .scaleAspectFill
+    }
+    
+    func startLoadingImage() {
+        activityIndicator.startAnimating()
+        movieImage.image = nil
     }
     
     override func prepareForReuse() {
@@ -72,7 +79,7 @@ class MovieCell: UITableViewCell {
         }
         
         activityIndicator.snp.makeConstraints { make in
-            make.centerX.equalTo(contentView.snp.centerX)
+            make.center.equalTo(movieImage)
         }
         
     }
