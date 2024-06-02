@@ -9,9 +9,11 @@ import UIKit
 import SnapKit
 
 class MovieDetailViewController: UIViewController {
-    var movieData: MovieDetail?
     var movieID = 0
     let urlImage = "https://image.tmdb.org/t/p/w500"
+    var movieData: MovieDetail?
+    var castData: [Cast] = []
+    
     
     var onScreenDismiss: (() -> Void)?
     
@@ -27,7 +29,7 @@ class MovieDetailViewController: UIViewController {
     lazy var contentView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 20
+        stackView.spacing = 0
         stackView.alignment = .center
         stackView.distribution = .equalSpacing
         return stackView
@@ -83,6 +85,14 @@ class MovieDetailViewController: UIViewController {
         stackView.axis = .vertical
         stackView.spacing = 30
         stackView.backgroundColor = .systemGray4
+        stackView.distribution = .equalSpacing
+        return stackView
+    }()
+    
+    lazy var stackCastView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 20
         stackView.distribution = .equalSpacing
         return stackView
     }()
@@ -163,6 +173,28 @@ class MovieDetailViewController: UIViewController {
         return text
     }()
     
+    lazy var castLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.text = "Cast"
+        label.font = UIFont.systemFont(ofSize: 36, weight: .bold)
+        return label
+    }()
+    
+    lazy var castCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 10
+        layout.minimumInteritemSpacing = 10
+        
+        let collection = UICollectionView(frame: CGRect.zero, collectionViewLayout: layout)
+        collection.showsHorizontalScrollIndicator = false
+        collection.dataSource = self
+        collection.delegate = self
+        collection.register(CastCollectionViewCell.self, forCellWithReuseIdentifier: CastCollectionViewCell.identifier)
+        return collection
+    }()
+    
     //MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -171,6 +203,7 @@ class MovieDetailViewController: UIViewController {
         
         
         setupViews()
+        setupConstraints()
         startLoadingImage()
         fetchMovieDetail()
     }
@@ -185,8 +218,14 @@ class MovieDetailViewController: UIViewController {
         NetworkManager.shared.getMovieDetail(movieID: movieID) { result in
             print(self.movieID)
             self.movieData = result
+//            self.updateContent()
+        }
+        
+        NetworkManager.shared.loadCast(movieId: movieID) { result in
+            self.castData = result
             self.updateContent()
         }
+
     }
     
     func startLoadingImage() {
@@ -198,21 +237,17 @@ class MovieDetailViewController: UIViewController {
         guard let movieData = movieData else { return }
         titleLabel.text = movieData.originalTitle
         releaseDateLabel.text = "Release Date: \(movieData.releaseDate ?? "Not announced")"
-        if let posterPath = movieData.posterPath {
-            let urlString = NetworkManager.shared.imageURL + posterPath
-            if let url = URL(string: urlString) {
-                NetworkManager.shared.downloadImage(from: url) { [weak self] image in
+        let posterPath = movieData.posterPath
+        NetworkManager.shared.downloadImage(posterPath: posterPath!) { [weak self] image in
                     self?.movieImage.image = image
                     self?.activityIndicator.stopAnimating()
-                }
-            }
         }
-        genreCollectionView.reloadData()
         setRatingStars(rating: movieData.voteAverage ?? 0)
         ratingLabel.text = String(format: "%.1f/10", movieData.voteAverage ?? "No ratings")
         voteCountLabel.text = "\(movieData.voteCount ?? 0)K"
         overviewText.text = movieData.overview
-        
+        genreCollectionView.reloadData()
+        castCollectionView.reloadData()
     }
     
     func setRatingStars(rating: Double) {
@@ -261,26 +296,30 @@ class MovieDetailViewController: UIViewController {
         scrollMovieDetail.addSubview(contentView)
         
         contentView.addArrangedSubview(stackPosterView)
-        contentView.addArrangedSubview(stackReleaseAndRatingView)
-        contentView.addArrangedSubview(stackOverview)
-        
         stackPosterView.addArrangedSubview(movieImage)
         stackPosterView.addArrangedSubview(titleLabel)
         stackPosterView.addArrangedSubview(activityIndicator)
         
+        contentView.addArrangedSubview(stackReleaseAndRatingView)
         stackReleaseAndRatingView.addArrangedSubview(stackReleaseView)
-        stackReleaseAndRatingView.addArrangedSubview(stackRateView)
-        
         stackReleaseView.addArrangedSubview(releaseDateLabel)
         stackReleaseView.addArrangedSubview(genreCollectionView)
         
+        stackReleaseAndRatingView.addArrangedSubview(stackRateView)
         stackRateView.addArrangedSubview(stackRatingStarsView)
         stackRateView.addArrangedSubview(ratingLabel)
         stackRateView.addArrangedSubview(voteCountLabel)
         
+        contentView.addArrangedSubview(stackOverview)
         stackOverview.addArrangedSubview(overviewLabel)
         stackOverview.addArrangedSubview(overviewText)
         
+        contentView.addArrangedSubview(stackCastView)
+        stackCastView.addArrangedSubview(castLabel)
+        stackCastView.addArrangedSubview(castCollectionView)
+    }
+    
+    func setupConstraints() {
         scrollMovieDetail.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading)
@@ -314,7 +353,7 @@ class MovieDetailViewController: UIViewController {
         }
         
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(movieImage.snp.bottom).offset(30)
+            make.top.equalTo(movieImage.snp.bottom).offset(20)
         }
         
         stackReleaseAndRatingView.snp.makeConstraints { make in
@@ -367,7 +406,6 @@ class MovieDetailViewController: UIViewController {
         stackOverview.snp.makeConstraints { make in
             make.top.equalTo(stackReleaseView.snp.bottom).offset(30)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-30)
         }
         
         overviewLabel.snp.makeConstraints { make in
@@ -379,29 +417,65 @@ class MovieDetailViewController: UIViewController {
             make.top.equalTo(overviewLabel.snp.bottom).offset(10)
             make.leading.equalToSuperview().offset(10)
             make.trailing.equalToSuperview().offset(-10)
-            make.bottom.equalToSuperview().offset(-30)
         }
         
-    }
+        stackCastView.snp.makeConstraints { make in
+            make.top.equalTo(stackOverview.snp.bottom)
+            make.leading.trailing.equalToSuperview()
+        }
+        
+        castLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(20)
+            make.leading.trailing.equalToSuperview()
+        }
+        
+        castCollectionView.snp.makeConstraints { make in
+            make.top.equalTo(castLabel.snp.bottom).offset(20)
+            make.leading.equalToSuperview().offset(10)
+            make.trailing.equalToSuperview().offset(-10)
+            make.height.equalTo(80)
+        }
+    }        
 }
 
 //MARK: - Genre Collection View Configuration
 extension MovieDetailViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        movieData?.genres?.count ?? 0
+        if collectionView == genreCollectionView {
+            return movieData?.genres?.count ?? 0
+        } else {
+            return castData.count
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = genreCollectionView.dequeueReusableCell(withReuseIdentifier: GenreCollectionViewCell.identifier, for: indexPath) as! GenreCollectionViewCell
-        if let genre = movieData?.genres?[indexPath.row].name {
-            cell.label.text = genre
+        if collectionView == genreCollectionView {
+            guard let cell = genreCollectionView.dequeueReusableCell(withReuseIdentifier: GenreCollectionViewCell.identifier, for: indexPath) as? GenreCollectionViewCell else { return UICollectionViewCell() }
+            if let genre = movieData?.genres?[indexPath.row].name {
+                cell.label.text = genre
+            }
+            cell.layer.cornerRadius = 10
+            cell.layer.masksToBounds = true
+            return cell
+        } else {
+            guard let cell = castCollectionView.dequeueReusableCell(withReuseIdentifier: CastCollectionViewCell.identifier, for: indexPath) as? CastCollectionViewCell else { return UICollectionViewCell() }
+            cell.labelName.text = castData[indexPath.row].name
+            cell.labelRole.text = castData[indexPath.row].character
+            if let posterPath = castData[indexPath.row].profilePath {
+                NetworkManager.shared.downloadImage(posterPath: posterPath) { result in
+                    cell.imageActor.image = result
+                }
+            }
+            return cell
         }
-        cell.layer.cornerRadius = 10
-        cell.layer.masksToBounds = true
-        return cell
     }
+    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 80, height: 22)
+        if collectionView == genreCollectionView {
+            return CGSize(width: 80, height: 22)
+        } else {
+            return CGSize(width: 182, height: 80)
+        }
     }
 }
                                     

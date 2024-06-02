@@ -122,7 +122,22 @@ final class NetworkManager {
         }.resume()
     }
     
-    func downloadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
+    func loadCast(movieId:Int, completion: @escaping ([Cast]) -> Void) {
+        urlComponent.path = "/3/movie/\(movieId)/casts"
+        guard let url = urlComponent.url else { return }
+        
+        AF.request(url).responseDecodable(of: MovieCast.self) { response in
+            if let result = try? response.result.get() {
+                DispatchQueue.main.async {
+                    completion(result.cast)
+                }
+            }
+        }
+    }
+    
+    func downloadImage(posterPath: String, completion: @escaping (UIImage?) -> Void) {
+        let urlString = imageURL + posterPath
+        guard let url = URL(string: urlString) else { return }
         session.dataTask(with: url) { data, response, error in
             if let data = data, error == nil, let image = UIImage(data: data) {
                 DispatchQueue.main.async {

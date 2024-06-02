@@ -7,8 +7,10 @@
 
 import UIKit
 import SnapKit
+import CoreData
 
 class ViewController: UIViewController {
+    var movieData: [Results] = []
     //Theme Collection View Cell, to choose a proper movie theme
     private let themes: [MovieTheme] = [.popular, .upcoming, .nowPlaying, .topRated]
     
@@ -50,8 +52,6 @@ class ViewController: UIViewController {
         return tableView
     }()
     
-    var movieData: [Results] = []
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -60,7 +60,6 @@ class ViewController: UIViewController {
         self.navigationController?.navigationBar.tintColor = .black
         
         setupViews()
-        //getThemeMovies(theme: currentTheme)
         fetchMoviesForCurrentTheme()
     }
     
@@ -99,6 +98,39 @@ class ViewController: UIViewController {
                 //Handle error (e.g., show an alert to the user)
                 print("Error fetching movies: \(error.localizedDescription)")
             }
+        }
+    }
+    
+    func saveFavorite(movie: Results) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let context = appDelegate.persistantContainer.viewContext
+        guard let entity = NSEntityDescription.entity(forEntityName: "Favorites", in: context) else { return }
+        let favoriteManager = NSManagedObject(entity: entity, insertInto: context)
+        favoriteManager.setValue(movie.id, forKey: "movieId")
+        favoriteManager.setValue(movie.posterPath, forKey: "posterPath")
+        favoriteManager.setValue(movie.title, forKey: "title")
+        do {
+            try context.save()
+        } 
+        catch {
+            print("error save")
+        }
+        
+        func deleteFavorite() {
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+            let context = appDelegate.persistantContainer.viewContext
+            let fetch = NSFetchRequest<NSManagedObject>(entityName: "Favorites")
+            let predicate = NSPredicate(format: "movieId == %@", movie.id)
+            fetch.predicate = predicate
+            do {
+                let result = try context.fetch(fetch)
+                guard let data = result.first else { return }
+                context.delete(data)
+            }
+            catch let error as NSError {
+                print(error)
+            }
+            
         }
     }
 }
