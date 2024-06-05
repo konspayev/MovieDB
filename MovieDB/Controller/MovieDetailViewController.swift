@@ -195,6 +195,15 @@ class MovieDetailViewController: UIViewController {
         return collection
     }()
     
+    lazy var watchListButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Add to Watch List", for: .normal)
+        button.backgroundColor = .systemBlue
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 10, weight: .bold)
+        button.layer.cornerRadius = 10
+        return button
+    }()
+    
     //MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -215,15 +224,20 @@ class MovieDetailViewController: UIViewController {
     
     //MARK: - Methods
     func fetchMovieDetail() {
-        NetworkManager.shared.getMovieDetail(movieID: movieID) { result in
-            print(self.movieID)
-            self.movieData = result
-//            self.updateContent()
+        NetworkManager.shared.loadMovieDetail(movieID: movieID) { [weak self] result in
+            print(self?.movieID ?? "No movie ID")
+            self?.movieData = result
         }
         
-        NetworkManager.shared.loadCast(movieId: movieID) { result in
-            self.castData = result
-            self.updateContent()
+        NetworkManager.shared.loadCast(movieId: movieID) { [weak self] result in
+            self?.castData = result
+            let arrayWatchList = StorageManager.shared.loadWatchList(key: .watchList) as? [Int]
+            if arrayWatchList?.firstIndex(of: self?.movieData?.id! ?? 0) != nil {
+                self?.watchListButton.setTitle("Remove from Watch List", for: .normal)
+                self?.watchListButton.backgroundColor = .systemRed
+            }
+            self?.updateContent()
+            
         }
 
     }
@@ -238,7 +252,7 @@ class MovieDetailViewController: UIViewController {
         titleLabel.text = movieData.originalTitle
         releaseDateLabel.text = "Release Date: \(movieData.releaseDate ?? "Not announced")"
         let posterPath = movieData.posterPath
-        NetworkManager.shared.downloadImage(posterPath: posterPath!) { [weak self] image in
+        NetworkManager.shared.loadImage(posterPath: posterPath!) { [weak self] image in
                     self?.movieImage.image = image
                     self?.activityIndicator.stopAnimating()
         }
@@ -289,6 +303,26 @@ class MovieDetailViewController: UIViewController {
         }
     }
     
+    @IBAction
+    func addWatchList() {
+        guard let id = movieData?.id else { return }
+        if let storageId = StorageManager.shared.loadWatchList(key: .watchList) as? [Int] {
+            if storageId.firstIndex(of: id) != nil {
+                StorageManager.shared.removeWatchList(id: id, key: .watchList)
+                watchListButton.setTitle("Add to Watch List", for: .normal)
+                watchListButton.backgroundColor = .systemBlue
+            }
+            else {
+                StorageManager.shared.saveWatchList(id, key: .watchList)
+                watchListButton.setTitle("Remove from Watch List", for: .normal)
+                watchListButton.backgroundColor = .systemRed
+            }
+        }
+        else {
+            StorageManager.shared.saveWatchList(id, key: .watchList)
+        }
+    }
+    
     //MARK: - Setup UIViews and Layout
     func setupViews() {
         view.addSubview(scrollMovieDetail)
@@ -317,6 +351,8 @@ class MovieDetailViewController: UIViewController {
         contentView.addArrangedSubview(stackCastView)
         stackCastView.addArrangedSubview(castLabel)
         stackCastView.addArrangedSubview(castCollectionView)
+        
+        contentView.addArrangedSubview(watchListButton)
     }
     
     func setupConstraints() {
@@ -435,7 +471,15 @@ class MovieDetailViewController: UIViewController {
             make.trailing.equalToSuperview().offset(-10)
             make.height.equalTo(80)
         }
-    }        
+        
+        watchListButton.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.bottom.equalToSuperview()
+            make.width.equalTo(147)
+        }
+        
+        watchListButton.addTarget(self, action: #selector(addWatchList), for: .touchUpInside)
+    }
 }
 
 //MARK: - Genre Collection View Configuration
@@ -462,7 +506,7 @@ extension MovieDetailViewController: UICollectionViewDataSource, UICollectionVie
             cell.labelName.text = castData[indexPath.row].name
             cell.labelRole.text = castData[indexPath.row].character
             if let posterPath = castData[indexPath.row].profilePath {
-                NetworkManager.shared.downloadImage(posterPath: posterPath) { result in
+                NetworkManager.shared.loadImage(posterPath: posterPath) { result in
                     cell.imageActor.image = result
                 }
             }

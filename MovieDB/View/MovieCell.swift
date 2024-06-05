@@ -23,6 +23,7 @@ class MovieCell: UITableViewCell {
         image.translatesAutoresizingMaskIntoConstraints = false
         image.layer.masksToBounds = true
         image.layer.cornerRadius = 30
+        image.contentMode = .scaleAspectFill
         return image
     }()
     
@@ -39,23 +40,27 @@ class MovieCell: UITableViewCell {
         return image
     }()
     
+    var isFavoriteMethod: ((Bool) -> Void)?
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupLayout()
+        
+        self.backgroundColor = .clear
+        self.selectionStyle = .none
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setTitle(title: String) {
+    func conf(title: String, posterPath: String) {
         titleLabel.text = title
-    }
-    
-    func setImage(image: UIImage?) {
+        startLoadingImage()
+        NetworkManager.shared.loadImage(posterPath: posterPath) { result in
+            self.movieImage.image = result
+        }
         activityIndicator.stopAnimating()
-        movieImage.image = image
-        movieImage.contentMode = .scaleAspectFill
     }
     
     func startLoadingImage() {
@@ -67,6 +72,7 @@ class MovieCell: UITableViewCell {
         super.prepareForReuse()
         movieImage.image = nil
         titleLabel.text = nil
+        activityIndicator.stopAnimating()
     }
     
     private func setupLayout() {
@@ -102,17 +108,14 @@ class MovieCell: UITableViewCell {
         favoriteImageView.addGestureRecognizer(tap)
     }
     
+    func tapFavorite(isNotFavorite: Bool) {
+        favoriteImageView.image = isNotFavorite ? UIImage(systemName: "heart.fill") : UIImage(systemName: "heart")
+    }
+    
     @objc
     func tap() {
-        favoriteImageView.image = favoriteImageView.image == UIImage(systemName: "heart") ? UIImage(systemName: "heart.fill") : UIImage(systemName: "heart")
+        isFavoriteMethod!(true)
     }
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
-
 }
 
 extension UITableViewCell {

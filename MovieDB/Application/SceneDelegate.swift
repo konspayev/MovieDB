@@ -18,7 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.windowScene = windowScene
         let mainViewController = ViewController()
         let tabBar = UITabBarController()
-        let favoritesViewController = FavoritesViewCellViewController()
+        let favoritesViewController = FavoritesViewController()
         let watchlistViewController = WatchListViewController()
         let findViewController = FindViewController()
         let profileViewController = ProfileViewController()
