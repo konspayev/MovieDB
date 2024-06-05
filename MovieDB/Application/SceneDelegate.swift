@@ -1,6 +1,6 @@
 //
 //  SceneDelegate.swift
-//  NoStoryTest
+//  MovieDB
 //
 //  Created by Nursultan Konspayev on 27.04.2024.
 //
@@ -16,10 +16,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
         window?.windowScene = windowScene
-        window?.makeKeyAndVisible()
         let mainViewController = ViewController()
+        let tabBar = UITabBarController()
+        let favoritesViewController = FavoritesViewController()
+        let watchlistViewController = WatchListViewController()
+        let findViewController = FindViewController()
+        let profileViewController = ProfileViewController()
         let navigationController = UINavigationController(rootViewController: mainViewController)
-        window?.rootViewController = navigationController
+        tabBar.viewControllers = [navigationController, favoritesViewController, watchlistViewController, findViewController, profileViewController]
+        tabBar.tabBar.tintColor = .label
+        navigationController.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 1)
+        favoritesViewController.tabBarItem = UITabBarItem(title: "Favorites", image: UIImage(systemName: "heart"), tag: 2)
+        watchlistViewController.tabBarItem = UITabBarItem(title: "Watch list", image: UIImage(systemName: "eye"), tag: 3)
+        findViewController.tabBarItem = UITabBarItem(title: "Find", image: UIImage(systemName: "magnifyingglass"), tag: 4)
+        profileViewController.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person.crop.circle"), tag: 5)
+        
+        
+        window?.makeKeyAndVisible()
+        window?.rootViewController = tabBar
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

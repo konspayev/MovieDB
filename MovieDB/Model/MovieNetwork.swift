@@ -5,11 +5,39 @@
 
 import Foundation
 
+//MARK: - Enumeration representing different movie categories
+enum MovieTheme {
+    case popular
+    case nowPlaying
+    case upcoming
+    case topRated
+    
+    // Title to be displayed for each category
+    var title: String {
+        switch self {
+        case .nowPlaying: "Now Playing"
+        case .popular: "Popular"
+        case .upcoming: "Upcoming"
+        case .topRated: "Top Rated"
+        }
+    }
+    
+    // URL path segment for each category
+    var url: String {
+        switch self {
+        case .popular: return "popular"
+        case .nowPlaying: return "now_playing"
+        case .upcoming: return "upcoming"
+        case .topRated: return "top_rated"
+        }
+    }
+}
+
 // MARK: - Movie
 struct Movie: Codable {
     let dates: Dates
     let page: Int
-    let results: [List]
+    let results: [Results]
     let totalPages, totalResults: Int
 
     enum CodingKeys: String, CodingKey {
@@ -21,7 +49,7 @@ struct Movie: Codable {
 
 struct ThemeMovie: Codable {
     let page: Int
-    let results: [List]
+    let results: [Results]
     let totalPages, totalResults: Int
 
     enum CodingKeys: String, CodingKey {
@@ -43,8 +71,8 @@ enum OriginalLanguage: String, Codable {
     case ja = "ja"
 }
 
-// MARK: - Result
-struct List: Codable {
+// MARK: - Results
+struct Results: Codable {
     let adult: Bool
     let backdropPath: String
     let genreIDS: [Int]
