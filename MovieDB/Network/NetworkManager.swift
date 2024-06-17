@@ -7,11 +7,16 @@
 
 import UIKit
 import Alamofire
+import Lottie
 
 final class NetworkManager {
+//MARK: - Properties
     static let shared = NetworkManager()
+    
     let imageURL = "https://image.tmdb.org/t/p/w500"
+    
     private let apiKey = "ced760785529022f787ac282841dc942"
+    
     private lazy var urlComponent: URLComponents = {
         var component = URLComponents()
         component.scheme = "https"
@@ -21,12 +26,16 @@ final class NetworkManager {
         ]
         return component
     }()
-
+    
+//MARK: - Methods
     func loadMovies(theme: MovieTheme, completion: @escaping ([Results]) -> Void) {
         urlComponent.path = "/3/movie/\(theme.url)"
         guard let url = urlComponent.url else { return }
         
         AF.request(url).responseDecodable(of: ThemeMovie.self) { response in
+            if let error = response.error {
+                print(error)
+            }
             let data = response.result
             if let result = try? data.get() {
                 DispatchQueue.main.async {

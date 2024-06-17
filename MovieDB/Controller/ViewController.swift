@@ -8,11 +8,29 @@
 import UIKit
 import SnapKit
 import CoreData
+import Lottie
 
 class ViewController: UIViewController {
+//MARK: - Properties
     var movieData: [Results] = []
     
     private var favoriteMovie: [NSManagedObject] = []
+    private var labelXPosition: Constraint!
+    private var labelYPosition: Constraint!
+    
+    private lazy var movieLabel: UILabel = {
+        let label = UILabel()
+        label.text = "MovieDB"
+        label.textAlignment = .center
+        label.font = UIFont.systemFont(ofSize: 36, weight: .bold)
+        return label
+    }()
+    
+    private lazy var disappearView: UIView = {
+        let view = UIView()
+        view.alpha = 0
+        return view
+    }()
     
     //Theme Collection View Cell, to choose a proper movie theme
     private let themes: [MovieTheme] = [.popular, .upcoming, .nowPlaying, .topRated]
@@ -50,10 +68,19 @@ class ViewController: UIViewController {
         return tableView
     }()
     
+    var errorAnimation: LottieAnimationView = {
+        var animation = LottieAnimationView()
+        animation = .init(name: "catinbox")
+        animation.animationSpeed = 0.5
+        animation.loopMode = .loop
+        animation.play()
+        return animation
+    }()
+    
+ //MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.navigationItem.title = "MovieDB"
         self.navigationItem.backButtonTitle = ""
         self.navigationController?.navigationBar.tintColor = .black
         
@@ -66,6 +93,13 @@ class ViewController: UIViewController {
         loadFavorite()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        animate()
+    }
+
+//MARK: - Methods
     private func fetchMoviesForTheme(theme: MovieTheme) {
         NetworkManager.shared.loadMovies(theme: theme) { [weak self] result in
             self?.movieData = result
@@ -83,7 +117,7 @@ class ViewController: UIViewController {
         favoriteManager.setValue(movie.title, forKey: "title")
         do {
             try context.save()
-        } 
+        }
         catch {
             print("error save")
         }
@@ -118,14 +152,50 @@ class ViewController: UIViewController {
         }
     }
     
+    func animate() {
+        UIView.animate(withDuration: 1) {
+            self.movieLabel.alpha = 1
+        } completion: { _ in
+            UIView.animate(withDuration: 1) {
+                self.movieLabel.transform = CGAffineTransform(scaleX: 0.8, y: 0.5)
+            } completion: { _ in
+                UIView.animate(withDuration: 1, delay: 0.5, usingSpringWithDamping: 0.5, initialSpringVelocity: 1) {
+                    self.animateToTheTop()
+                    self.movieLabel.transform = CGAffineTransform(scaleX: 1, y: 1)
+                } completion: { _ in
+                    self.disappearView.alpha = 1
+                }
+            }
+        }
+    }
+    
+    func animateToTheTop() {
+        labelYPosition.update(offset:
+        -(view.safeAreaLayoutGuide.layoutFrame.height/2) - 16)
+        view.layoutSubviews()
+    }
+
+
+//MARK: - Setup Views
     private func setupViews() {
         view.backgroundColor = .white
-        view.addSubview(labelTheme)
-        view.addSubview(themeCollectionView)
-        view.addSubview(tableView)
+        view.addSubview(movieLabel)
+        view.addSubview(disappearView)
+        
+        [labelTheme, themeCollectionView, tableView].forEach { disappearView.addSubview($0) }
+                
+        movieLabel.snp.makeConstraints { make in
+            labelXPosition = make.centerX.equalTo(view.safeAreaLayoutGuide).constraint
+            labelYPosition = make.centerY.equalTo(view.safeAreaLayoutGuide).constraint
+        }
+        
+        disappearView.snp.makeConstraints { make in
+            make.top.equalTo(movieLabel.snp.bottom).offset(10)
+            make.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
         
         labelTheme.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.top.equalTo(movieLabel.snp.bottom)
             make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(5)
         }
         

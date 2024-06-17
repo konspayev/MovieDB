@@ -48,7 +48,7 @@ class FavoritesViewController: UIViewController {
         view.addSubview(movieTableView)
 
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(36)
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(40)
             make.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).offset(-40)
         }
