@@ -14,13 +14,11 @@ class MovieCell: UITableViewCell {
         let label = UILabel()
         label.textAlignment = .center
         label.font = UIFont.boldSystemFont(ofSize: 20)
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private lazy var movieImage: UIImageView = {
         let image = UIImageView()
-        image.translatesAutoresizingMaskIntoConstraints = false
         image.layer.masksToBounds = true
         image.layer.cornerRadius = 30
         image.contentMode = .scaleAspectFill
